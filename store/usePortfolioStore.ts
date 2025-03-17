@@ -7,6 +7,7 @@ interface Coin {
     symbol: string;
     name: string;
     amount?: number;
+    averagePrice?: number; // Dodane pole do przechowywania średniej ceny zakupu
 }
 
 interface Transaction {
@@ -45,13 +46,21 @@ const usePortfolioStore = create<PortfolioState>()(
                     throw new Error('Niewystarczające środki');
                 }
 
+                const currentAsset = assets[coin.id];
+                const currentAmount = currentAsset?.amount || 0;
+                const currentTotalCost = (currentAsset?.averagePrice || 0) * currentAmount;
+
+                // Oblicz nową średnią cenę zakupu
+                const newAveragePrice = (currentTotalCost + cost) / (currentAmount + amount);
+
                 set((state) => ({
                     funds: state.funds - cost,
                     assets: {
                         ...state.assets,
                         [coin.id]: {
                             ...coin,
-                            amount: (state.assets[coin.id]?.amount || 0) + amount,
+                            amount: currentAmount + amount,
+                            averagePrice: newAveragePrice, // Aktualizuj średnią cenę zakupu
                         },
                     },
                     transactions: [

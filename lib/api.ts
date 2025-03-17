@@ -64,3 +64,32 @@ export const fetchCoinHistory = async (coinId: string, days: number = 7): Promis
     });
     return response.data;
 };
+
+export const fetchCoinsByIds = async (coinIds: string[]): Promise<CoinMarket[]> => {
+    const response = await apiClient.get<CoinMarket[]>('/coins/markets', {
+        params: {
+            vs_currency: 'usd',
+            ids: coinIds.join(','), // Przekazujemy listę ID tokenów oddzielonych przecinkami
+            order: 'market_cap_desc',
+            sparkline: false,
+            price_change_percentage: '24h',
+        },
+    });
+    return response.data;
+};
+
+export const fetchCoinPrice = async (coinId: string): Promise<number> => {
+    try {
+        const response = await apiClient.get<CoinMarket[]>('/coins/markets', {
+            params: {
+                vs_currency: 'usd',
+                ids: coinId, // Używamy 'ids' zamiast 'symbols' ponieważ API CoinGecko używa ID coina
+            },
+        });
+        const coinData = response.data[0];
+        return coinData ? coinData.current_price : 0;
+    } catch (error) {
+        console.error("Błąd podczas pobierania ceny coina:", error);
+        return 0;
+    }
+};
